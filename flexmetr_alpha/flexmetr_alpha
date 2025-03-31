@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+
+import sys
+import os
+import subprocess
+import argparse
+import time
+
+
+submodules_available = ('assign','tree','organize','tree2',)
+software_description = 'FlexMetR: Flexible Metadata Resources lets you add metadata to accession numbers or custom identifiers.'
+
+## Define argparse
+argparser = argparse.ArgumentParser(description=software_description)
+argparser.add_argument('submodule', choices=submodules_available, help='Submodule to run')
+argparser.add_argument('args', nargs=argparse.REMAINDER, help='Arguments to pass to the submodule')
+##/
+## Check if had any user input
+if len(sys.argv) == 1:
+    argparser.print_help(sys.stderr)
+    sys.exit()
+##/
+## Parse user input
+args = argparser.parse_args()
+submodule = args.submodule
+submodule_args = args.args
+##/
+
+## Validate input
+# Check if arguments are input multiple times
+args_count = {}
+for arg in submodule_args:
+    if not arg in args_count:       args_count[arg] = 0
+    args_count[arg] += 1
+
+args_count_multiple = []
+for arg,count in args_count.items():
+    if arg[0] == '-' or arg[:2] == '--':
+        if count >= 2:
+            args_count_multiple.append([arg,count])
+
+if args_count_multiple:
+    print('[WARNING] Found multiple inputs of arguments:')
+    for arg,count in args_count_multiple:
+        print(arg+'\t'+str(count))
+    print(' '.join(args))
+    print('Please specify arguments once. Terminating!')
+    sys.exit()
+#/
+##/
+
+## Execute submodule
+# Construct the command to execute the submodule
+cmd = [submodule + '.py'] + submodule_args
+
+# Run the subprocess with the constructed command
+subprocess.call(cmd)
+##/
